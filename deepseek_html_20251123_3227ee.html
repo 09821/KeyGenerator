@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Keys - BrainzBR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .screen {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.5s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .screen.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            display: none;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #00c3ff;
+            font-size: 32px;
+            text-shadow: 0 0 10px rgba(0, 195, 255, 0.5);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+
+        .title:hover {
+            transform: scale(1.05);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #e6e6e6;
+            font-size: 18px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00c3ff;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00c3ff;
+            box-shadow: 0 0 10px rgba(0, 195, 255, 0.5);
+        }
+
+        input.error {
+            border-color: #ff3860;
+            box-shadow: 0 0 10px rgba(255, 56, 96, 0.5);
+        }
+
+        .error-message {
+            color: #ff3860;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #00c3ff, #0077ff);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 195, 255, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.secondary {
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: rgba(0, 255, 170, 0.2);
+            color: #00ffaa;
+            border: 1px solid rgba(0, 255, 170, 0.5);
+        }
+
+        .status-message.error {
+            background: rgba(255, 56, 96, 0.2);
+            color: #ff3860;
+            border: 1px solid rgba(255, 56, 96, 0.5);
+        }
+
+        .key-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            word-break: break-all;
+            font-family: monospace;
+            color: #00ffaa;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #b3b3b3;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .admin-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-title {
+            color: #ff7e5f;
+            margin-bottom: 15px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .site-container {
+            width: 100%;
+            height: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .site-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #00c3ff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Solicitação de Key -->
+    <div class="container">
+        <div class="screen" id="requestScreen">
+            <h1 class="title" id="mainTitle">Sistema de Keys</h1>
+            <h2 class="subtitle">By BrainzBR</h2>
+
+            <div class="input-group">
+                <label for="userWebhook">Seu Webhook do Discord</label>
+                <input type="text" id="userWebhook" placeholder="https://discord.com/api/webhooks/...">
+                <div class="error-message" id="webhookError">Por favor, insira um webhook válido do Discord</div>
+            </div>
+
+            <button class="button" id="requestKeyButton">
+                <span>🔑 SOLICITAR KEY</span>
+            </button>
+
+            <div class="status-message" id="requestStatus"></div>
+
+            <div class="footer">
+                Sistema de Keys BrainzBR | Todos os direitos reservados
+            </div>
+        </div>
+
+        <!-- Tela de Validação de Key -->
+        <div class="screen hidden" id="validationScreen">
+            <h1 class="title">Validação de Key</h1>
+            <h2 class="subtitle">Insira a key recebida</h2>
+
+            <div class="input-group">
+                <label for="userKey">Sua Key de Acesso</label>
+                <input type="text" id="userKey" placeholder="BRANZZ_XXXXXXXXXXXX">
+                <div class="error-message" id="keyError">Key inválida. Verifique se começa com BRANZZ_ e termina com um dos padrões aceitos.</div>
+            </div>
+
+            <button class="button" id="validateKeyButton">
+                <span>🔍 VERIFICAR KEY</span>
+            </button>
+
+            <div class="status-message" id="validationStatus"></div>
+
+            <div class="site-container hidden" id="siteContainer">
+                <iframe id="siteFrame" src="about:blank"></iframe>
+            </div>
+
+            <div class="footer">
+                Sistema de Keys BrainzBR | Validação de Acesso
+            </div>
+        </div>
+
+        <!-- Tela de Painel Admin -->
+        <div class="screen hidden" id="adminScreen">
+            <h1 class="title">Painel Administrativo</h1>
+            <h2 class="subtitle">Acesso Restrito</h2>
+
+            <div class="input-group">
+                <label for="adminKey">Key de Administrador</label>
+                <input type="password" id="adminKey" placeholder="Insira a key de administrador">
+                <div class="error-message" id="adminKeyError">Key de administrador incorreta</div>
+            </div>
+
+            <button class="button" id="validateAdminButton">
+                <span>⚡ VALIDAR ACESSO</span>
+            </button>
+
+            <div class="admin-panel hidden" id="adminPanel">
+                <h3 class="admin-title">Gerador de Keys</h3>
+                
+                <div class="input-group">
+                    <label for="targetWebhook">Webhook para Enviar a Key</label>
+                    <input type="text" id="targetWebhook" placeholder="https://discord.com/api/webhooks/...">
+                </div>
+
+                <button class="button secondary" id="generateKeyButton">
+                    <span>🔐 GERAR E ENVIAR KEY</span>
+                </button>
+
+                <div class="key-display hidden" id="generatedKeyDisplay"></div>
+
+                <div class="status-message" id="adminStatus"></div>
+            </div>
+
+            <div class="footer">
+                Painel Administrativo BrainzBR | Acesso Restrito
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos DOM
+        const requestScreen = document.getElementById('requestScreen');
+        const validationScreen = document.getElementById('validationScreen');
+        const adminScreen = document.getElementById('adminScreen');
+        const userWebhookInput = document.getElementById('userWebhook');
+        const webhookError = document.getElementById('webhookError');
+        const requestKeyButton = document.getElementById('requestKeyButton');
+        const requestStatus = document.getElementById('requestStatus');
+        const userKeyInput = document.getElementById('userKey');
+        const keyError = document.getElementById('keyError');
+        const validateKeyButton = document.getElementById('validateKeyButton');
+        const validationStatus = document.getElementById('validationStatus');
+        const siteContainer = document.getElementById('siteContainer');
+        const siteFrame = document.getElementById('siteFrame');
+        const adminKeyInput = document.getElementById('adminKey');
+        const adminKeyError = document.getElementById('adminKeyError');
+        const validateAdminButton = document.getElementById('validateAdminButton');
+        const adminPanel = document.getElementById('adminPanel');
+        const targetWebhookInput = document.getElementById('targetWebhook');
+        const generateKeyButton = document.getElementById('generateKeyButton');
+        const generatedKeyDisplay = document.getElementById('generatedKeyDisplay');
+        const adminStatus = document.getElementById('adminStatus');
+        const mainTitle = document.getElementById('mainTitle');
+
+        // Webhook Mestre (Dono)
+        const MASTER_WEBHOOK = "https://discord.com/api/webhooks/1440866091373953114/URxgjpUq737jR5Lxh1NndtnMyq7IrT5V8wKsB2fmWC-9FMxYGje0uWCUjeaACg48ICr9";
+
+        // Site para carregar após validação
+        const SITE_URL = "https://htmlpreview.github.io/?https://pastebin.com/raw/uLmfKQVy";
+
+        // Contador de cliques no título
+        let titleClickCount = 0;
+
+        // Função para validar webhook do Discord
+        function isValidWebhook(url) {
+            const webhookPattern = /^https:\/\/discord\.com\/api\/webhooks\/\d+\/[\w-]+$/;
+            return webhookPattern.test(url);
+        }
+
+        // Função para mostrar status
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = `status-message ${type}`;
+            element.style.display = "block";
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = "none";
+                }, 5000);
+            }
+        }
+
+        // Função para mudar de tela com animação
+        function switchScreen(fromScreen, toScreen) {
+            fromScreen.classList.add('hidden');
+            setTimeout(() => {
+                toScreen.classList.remove('hidden');
+            }, 500);
+        }
+
+        // Função para enviar mensagem para webhook
+        async function sendWebhook(webhookUrl, content, embed = null) {
+            const payload = {
+                content: content
+            };
+            
+            if (embed) {
+                payload.embeds = [embed];
+            }
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                return response.ok;
+            } catch (error) {
+                console.error('Erro ao enviar webhook:', error);
+                return false;
+            }
+        }
+
+        // Função para gerar uma key única
+        function generateKey() {
+            const prefix = "BRANZZ_";
+            const suffixes = ["8)9", "00)8", "88)(9", "8/08"];
+            const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+            const randomMiddle = Math.random().toString(36).substring(2, 10).toUpperCase();
+            
+            return `${prefix}${randomMiddle}${randomSuffix}`;
+        }
+
+        // Evento de clique no botão de solicitar key
+        requestKeyButton.addEventListener('click', async () => {
+            const userWebhook = userWebhookInput.value.trim();
+            
+            if (!userWebhook) {
+                userWebhookInput.classList.add('error');
+                webhookError.style.display = 'block';
+                return;
+            }
+            
+            if (!isValidWebhook(userWebhook)) {
+                userWebhookInput.classList.add('error');
+                webhookError.style.display = 'block';
+                return;
+            }
+            
+            userWebhookInput.classList.remove('error');
+            webhookError.style.display = 'none';
+            
+            // Mostrar loading
+            requestKeyButton.innerHTML = '<span class="loading"></span> ENVIANDO SOLICITAÇÃO...';
+            requestKeyButton.disabled = true;
+            
+            // Embed para o webhook mestre
+            const masterEmbed = {
+                title: "🔰📣 SOLICITAÇÃO DE KEY",
+                description: "ATENÇÃO WEEBHOOK MESTRE QUEREMOS INFORMAR, Q UM NOVO USUÁRIO ESTA QUERENDO UMA KEY POR FAVOR CRIE A KEY AGORA",
+                color: 0xff0000,
+                fields: [
+                    {
+                        name: "Link do Webhook 🔗",
+                        value: userWebhook,
+                        inline: false
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: "Sistema de Keys BrainzBR"
+                }
+            };
+            
+            // Embed para o webhook do usuário
+            const userEmbed = {
+                title: "PROJECT BRANZZ OK",
+                description: "OLA ESSA MENSAGEM E ENVIADA APOS PEDIR PARA GERAR UMA KEY 🔑🔐\nPEÇO Q AGUARDE ATE ALGUM DONO GERAR SUA KEY ELA SERA ENVIADA AQUI",
+                color: 0x00ff00,
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: "Sistema de Keys BrainzBR"
+                }
+            };
+            
+            // Enviar para ambos os webhooks simultaneamente
+            const masterPromise = sendWebhook(MASTER_WEBHOOK, "@everyone @here @everyone @here", masterEmbed);
+            const userPromise = sendWebhook(userWebhook, "PROJECT BRANZZ OK @everyone @here @everyone", userEmbed);
+            
+            const [masterSuccess, userSuccess] = await Promise.all([masterPromise, userPromise]);
+            
+            if (masterSuccess && userSuccess) {
+                showStatus(requestStatus, "Solicitação enviada com sucesso! Aguarde a key ser gerada.", "success");
+                
+                // Mudar para tela de validação após 2 segundos
+                setTimeout(() => {
+                    switchScreen(requestScreen, validationScreen);
+                }, 2000);
+            } else {
+                showStatus(requestStatus, "Erro ao enviar solicitação. Tente novamente.", "error");
+                requestKeyButton.innerHTML = '<span>🔑 SOLICITAR KEY</span>';
+                requestKeyButton.disabled = false;
+            }
+        });
+
+        // Evento de clique no botão de validar key
+        validateKeyButton.addEventListener('click', () => {
+            const userKey = userKeyInput.value.trim();
+            
+            // Padrões válidos para o final da key
+            const validSuffixes = ["8)9", "00)8", "88)(9", "8/08"];
+            
+            // Verificar se a key começa com BRANZZ_ e termina com um dos sufixos válidos
+            const isValidKey = userKey.startsWith("BRANZZ_") && 
+                              validSuffixes.some(suffix => userKey.endsWith(suffix));
+            
+            if (!isValidKey) {
+                userKeyInput.classList.add('error');
+                keyError.style.display = 'block';
+                return;
+            }
+            
+            userKeyInput.classList.remove('error');
+            keyError.style.display = 'none';
+            
+            showStatus(validationStatus, "Key válida! Carregando sistema...", "success");
+            
+            // Carregar o site após 1 segundo
+            setTimeout(() => {
+                siteContainer.classList.remove('hidden');
+                siteFrame.src = SITE_URL;
+                
+                // Enviar logs para os webhooks
+                const logEmbed = {
+                    title: "✅ KEY VALIDADA COM SUCESSO",
+                    description: `Key: ${userKey}\nUsuário validou com sucesso e acessou o sistema.`,
+                    color: 0x00ff00,
+                    timestamp: new Date().toISOString(),
+                    footer: {
+                        text: "Sistema de Logs BrainzBR"
+                    }
+                };
+                
+                sendWebhook(MASTER_WEBHOOK, "Log de Sistema - Key Validada", logEmbed);
+                
+                // Também enviar para o webhook do usuário se disponível
+                const userWebhook = userWebhookInput.value.trim();
+                if (userWebhook && isValidWebhook(userWebhook)) {
+                    sendWebhook(userWebhook, "Log de Sistema - Key Validada", logEmbed);
+                }
+            }, 1000);
+        });
+
+        // Evento de clique no título para acessar painel admin
+        mainTitle.addEventListener('click', () => {
+            titleClickCount++;
+            
+            if (titleClickCount >= 2) {
+                switchScreen(requestScreen, adminScreen);
+                titleClickCount = 0;
+            }
+            
+            setTimeout(() => {
+                titleClickCount = 0;
+            }, 1000);
+        });
+
+        // Evento de validação de acesso admin
+        validateAdminButton.addEventListener('click', () => {
+            const adminKey = adminKeyInput.value.trim();
+            
+            // Key de administrador fixa
+            if (adminKey === "Branzz9890") {
+                adminKeyInput.classList.remove('error');
+                adminKeyError.style.display = 'none';
+                adminPanel.classList.remove('hidden');
+            } else {
+                adminKeyInput.classList.add('error');
+                adminKeyError.style.display = 'block';
+            }
+        });
+
+        // Evento de gerar e enviar key
+        generateKeyButton.addEventListener('click', async () => {
+            const targetWebhook = targetWebhookInput.value.trim();
+            
+            if (!targetWebhook || !isValidWebhook(targetWebhook)) {
+                showStatus(adminStatus, "Por favor, insira um webhook válido", "error");
+                return;
+            }
+            
+            generateKeyButton.innerHTML = '<span class="loading"></span> GERANDO KEY...';
+            generateKeyButton.disabled = true;
+            
+            // Primeira mensagem para o usuário
+            const firstEmbed = {
+                title: "🔑 KEY SENDO GERADA",
+                description: "OLA SUA KEY JAJA SERA ENVIADA PARA SEU WEEBHOOK FIQUE DE OLHO MANDAREMOS EM ALGUNS SEGUNDOS @everyone @here",
+                color: 0xffff00,
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: "Sistema de Keys BrainzBR"
+                }
+            };
+            
+            const firstMessageSuccess = await sendWebhook(
+                targetWebhook, 
+                "@everyone @here @everyone @here", 
+                firstEmbed
+            );
+            
+            if (firstMessageSuccess) {
+                showStatus(adminStatus, "Primeira mensagem enviada. Key será enviada em 20 segundos...", "success");
+                
+                // Aguardar 20 segundos e enviar a key
+                setTimeout(async () => {
+                    const newKey = generateKey();
+                    
+                    // Mostrar a key no painel
+                    generatedKeyDisplay.textContent = newKey;
+                    generatedKeyDisplay.classList.remove('hidden');
+                    
+                    // Embed com a key
+                    const keyEmbed = {
+                        title: "✅ SUA KEY FOI GERADA",
+                        description: `Aqui está sua key de acesso:\n\n**${newKey}**\n\nUse esta key no sistema de validação.`,
+                        color: 0x00ff00,
+                        timestamp: new Date().toISOString(),
+                        footer: {
+                            text: "Sistema de Keys BrainzBR"
+                        }
+                    };
+                    
+                    const keyMessageSuccess = await sendWebhook(
+                        targetWebhook,
+                        "SUA KEY FOI GERADA COM SUCESSO! @everyone @here",
+                        keyEmbed
+                    );
+                    
+                    if (keyMessageSuccess) {
+                        showStatus(adminStatus, "Key enviada com sucesso para o webhook!", "success");
+                        
+                        // Enviar log para o webhook mestre
+                        const logEmbed = {
+                            title: "📋 LOG - KEY GERADA",
+                            description: `Key: ${newKey}\nWebhook de destino: ${targetWebhook}\nGerada em: ${new Date().toLocaleString()}`,
+                            color: 0x0099ff,
+                            timestamp: new Date().toISOString(),
+                            footer: {
+                                text: "Sistema de Logs BrainzBR"
+                            }
+                        };
+                        
+                        sendWebhook(MASTER_WEBHOOK, "Log Administrativo - Key Gerada", logEmbed);
+                    } else {
+                        showStatus(adminStatus, "Erro ao enviar a key. Tente novamente.", "error");
+                    }
+                    
+                    generateKeyButton.innerHTML = '<span>🔐 GERAR E ENVIAR KEY</span>';
+                    generateKeyButton.disabled = false;
+                }, 20000);
+            } else {
+                showStatus(adminStatus, "Erro ao enviar a primeira mensagem. Verifique o webhook.", "error");
+                generateKeyButton.innerHTML = '<span>🔐 GERAR E ENVIAR KEY</span>';
+                generateKeyButton.disabled = false;
+            }
+        });
+
+        // Validação em tempo real dos inputs
+        userWebhookInput.addEventListener('input', () => {
+            if (userWebhookInput.value.trim()) {
+                userWebhookInput.classList.remove('error');
+                webhookError.style.display = 'none';
+            }
+        });
+
+        userKeyInput.addEventListener('input', () => {
+            if (userKeyInput.value.trim()) {
+                userKeyInput.classList.remove('error');
+                keyError.style.display = 'none';
+            }
+        });
+
+        adminKeyInput.addEventListener('input', () => {
+            if (adminKeyInput.value.trim()) {
+                adminKeyInput.classList.remove('error');
+                adminKeyError.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
